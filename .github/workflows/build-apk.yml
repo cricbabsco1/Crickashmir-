@@ -34,7 +34,9 @@ jobs:
       - name: Compile APK
         run: |
           cd android
-          ./gradlew assembleDebug
+          echo "android.useAndroidX=true" >> gradle.properties
+          echo "android.enableJetifier=true" >> gradle.properties
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload Finished APK
         uses: actions/upload-artifact@v4
