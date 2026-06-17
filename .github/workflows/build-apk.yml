@@ -21,28 +21,44 @@ jobs:
       - name: Setup Capacitor & Android
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          # 1. FIXED: Changed the App Name and App Package ID here
           npx cap init "CricKashmir" "com.crickashmir.scorer" --web-dir=dist
           npx cap add android
-          
-      # 2. FIXED: Injected a script to replace the default android launcher icon with your favicon.png
+
+      # FIXED: Overwriting BOTH legacy and modern adaptive icon layers
       - name: Apply Custom App Icon
         run: |
+          # 1. Ensure all resolution directories exist
           mkdir -p android/app/src/main/res/mipmap-mdpi
           mkdir -p android/app/src/main/res/mipmap-hdpi
           mkdir -p android/app/src/main/res/mipmap-xhdpi
           mkdir -p android/app/src/main/res/mipmap-xxhdpi
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+
+          # 2. Overwrite legacy flat icons
           cp public/favicon.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
           cp public/favicon.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
           cp public/favicon.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
           cp public/favicon.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
           cp public/favicon.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          
           cp public/favicon.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
           cp public/favicon.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
           cp public/favicon.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
           cp public/favicon.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
           cp public/favicon.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+
+          # 3. Overwrite modern Adaptive Launcher layers (Foreground & Background)
+          cp public/favicon.png android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png
+          cp public/favicon.png android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png
+          cp public/favicon.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png
+          cp public/favicon.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png
+          cp public/favicon.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
+
+          cp public/favicon.png android/app/src/main/res/mipmap-mdpi/ic_launcher_background.png
+          cp public/favicon.png android/app/src/main/res/mipmap-hdpi/ic_launcher_background.png
+          cp public/favicon.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_background.png
+          cp public/favicon.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_background.png
+          cp public/favicon.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_background.png
 
       - name: Sync Android Assets
         run: npx cap sync android
@@ -56,12 +72,9 @@ jobs:
       - name: Force Single Kotlin Version & Compile
         run: |
           cd android
-          
-          # Force AndroidX configurations
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
           
-          # Inject a global resolution strategy into the root build.gradle file to kill duplicates
           sed -i '/allprojects {/a \    subprojects {\n        project.configurations.all {\n            resolutionStrategy.eachDependency { details ->\n                if (details.requested.group == "org.jetbrains.kotlin") {\n                    details.useVersion "1.9.22"\n                }\n            }\n        }\n    }' build.gradle
           
           ./gradlew assembleDebug --no-daemon
